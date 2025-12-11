@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptMaster AI - HTML Version</title>
+    
+    <!-- Tailwind CSS with Dark Mode Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(168, 85, 247, 0.5); }
+
+        /* Animation Utilities */
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
+        .slide-up { animation: slideUp 0.5s ease-out forwards; opacity: 0; transform: translateY(20px); }
+        
+        @keyframes fadeIn { to { opacity: 1; } }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
+        /* Blinking Cursor */
+        .cursor-blink { animation: blink 1s step-end infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* Range Slider Customization */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px; width: 16px;
+            border-radius: 50%;
+            background: #a855f7;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            cursor: pointer;
+            background: #cbd5e1; /* Slate-300 for Light Mode */
+            border-radius: 2px;
+        }
+        /* Dark mode track override handled via JS or specific CSS selector if needed, 
+           but Tailwind classes on the input usually handle bg nicely. 
+           Here we use a generic color that works for both or override in Tailwind classes below. */
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 selection:bg-purple-500/30 overflow-x-hidden relative transition-colors duration-300">
+
+    <!-- 1. Background Effects -->
+    <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden transition-opacity duration-500">
+        <!-- Blobs: Using multiply for light mode (subtractive) and screen for dark mode (additive) -->
+        <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-400/30 dark:bg-purple-600/20 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen animate-pulse"></div>
+        <div class="absolute top-[20%] right-[-10%] w-[600px] h-[600px] bg-blue-400/30 dark:bg-blue-600/10 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-screen"></div>
+        <div class="absolute bottom-[-10%] left-[20%] w-[400px] h-[400px] bg-indigo-400/30 dark:bg-indigo-600/20 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen"></div>
+    </div>
+
+    <!-- Theme Toggle Button (Fixed) -->
+    <button onclick="toggleTheme()" class="fixed top-6 right-6 z-50 p-3 rounded-full bg-white/80 dark:bg-slate-800/80 shadow-lg border border-slate-200 dark:border-slate-700 backdrop-blur-sm transition-all hover:scale-110 active:scale-95 group">
+        <i data-lucide="sun" class="w-5 h-5 text-amber-500 hidden dark:block group-hover:rotate-90 transition-transform"></i>
+        <i data-lucide="moon" class="w-5 h-5 text-indigo-600 block dark:hidden group-hover:-rotate-12 transition-transform"></i>
+    </button>
+
+    <!-- Main Container -->
+    <div class="relative z-10 container mx-auto px-4 py-8 lg:py-12 max-w-7xl flex flex-col min-h-screen">
+        
+        <!-- 2. Header -->
+        <header class="text-center mb-12 space-y-4 fade-in" style="animation-delay: 0s;">
+            <div class="inline-flex items-center justify-center p-3 bg-white/40 dark:bg-white/5 border border-white/50 dark:border-white/10 rounded-2xl shadow-xl backdrop-blur-xl mb-4">
+                <i data-lucide="sparkles" class="w-8 h-8 text-purple-600 dark:text-purple-400 mr-3"></i>
+                <h1 class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600 dark:from-purple-400 dark:via-pink-300 dark:to-blue-400">
+                    PromptMaster AI
+                </h1>
+            </div>
+            <p class="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto font-medium">
+                Tạo system prompt "chuẩn giáo sư" chỉ trong vài giây. Tối ưu hóa ChatGPT & Gemini cho việc học tập.
+            </p>
+        </header>
+
+        <!-- 3. Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start flex-1">
+            
+            <!-- Left Column: Configuration Form -->
+            <div class="lg:col-span-5 space-y-6 slide-up" style="animation-delay: 0.1s;">
+                <div class="bg-white/70 dark:bg-slate-900/40 border border-slate-200 dark:border-white/10 backdrop-blur-md rounded-3xl p-6 shadow-xl transition-colors duration-300">
+                    
+                    <!-- Subject Input -->
+                    <div class="group mb-6">
+                        <div class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                            <i data-lucide="book-open" class="w-4 h-4 text-purple-600 dark:text-purple-400"></i>
+                            <span>Môn học / Lĩnh vực</span>
+                        </div>
+                        <input type="text" id="subject" placeholder="VD: Toán cao cấp, Vật lý hạt nhân..." value="Toán học"
+                            class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all shadow-sm">
+                    </div>
+
+                    <!-- Role Selection -->
+                    <div class="mb-6">
+                        <div class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                            <i data-lucide="user" class="w-4 h-4 text-purple-600 dark:text-purple-400"></i>
+                            <span>Vai trò người hướng dẫn</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="role-container">
+                            <!-- Roles will be injected here by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Grade Level Slider -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                <i data-lucide="graduation-cap" class="w-4 h-4 text-purple-600 dark:text-purple-400"></i>
+                                <span>Trình độ người học</span>
+                            </div>
+                            <span id="grade-display" class="text-xs font-bold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-lg border border-purple-200 dark:border-purple-500/20 shadow-sm">
+                                Lớp 12
+                            </span>
+                        </div>
+                        
+                        <div class="relative w-full h-8">
+                            <input type="range" id="grade-slider" min="1" max="16" step="1" value="12"
+                                class="absolute top-0 w-full h-2 z-20 mt-1 dark:bg-slate-700 bg-slate-300 rounded-lg appearance-none">
+                            
+                            <!-- Slider Labels -->
+                            <div class="absolute top-5 w-full h-4 text-[10px] text-slate-500 dark:text-slate-500 pointer-events-none select-none font-medium">
+                                <span class="absolute left-0">Lớp 1</span>
+                                <span class="absolute left-[33.3%] -translate-x-1/2 hidden sm:block">Lớp 6</span>
+                                <span class="absolute left-[60%] -translate-x-1/2 hidden sm:block">Lớp 10</span>
+                                <span id="label-grade-12" class="absolute left-[73.3%] -translate-x-1/2 transition-colors text-purple-600 dark:text-purple-400 font-bold">Lớp 12</span>
+                                <span class="absolute right-0">Tiến sĩ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Curriculum Select -->
+                    <div class="mb-6">
+                        <div class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                            <i data-lucide="globe" class="w-4 h-4 text-purple-600 dark:text-purple-400"></i>
+                            <span>Chương trình / Giáo trình</span>
+                        </div>
+                        <div class="relative">
+                            <select id="curriculum" class="w-full appearance-none bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 pr-10 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all cursor-pointer shadow-sm">
+                                <!-- Options injected by JS -->
+                            </select>
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Depth Selection -->
+                    <div>
+                        <div class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                            <i data-lucide="layers" class="w-4 h-4 text-purple-600 dark:text-purple-400"></i>
+                            <span>Mức độ giải thích</span>
+                        </div>
+                        <div class="flex flex-col gap-2" id="depth-container">
+                            <!-- Depths injected by JS -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right Column: Live Preview -->
+            <div class="lg:col-span-7 lg:sticky lg:top-8 max-h-[calc(100vh-4rem)] flex flex-col slide-up" style="animation-delay: 0.3s;">
+                <div class="bg-white/80 dark:bg-black/40 border border-slate-200 dark:border-white/10 backdrop-blur-xl rounded-3xl overflow-hidden shadow-2xl flex flex-col h-full min-h-[400px] transition-colors duration-300">
+                    
+                    <!-- Preview Header -->
+                    <div class="bg-slate-50/80 dark:bg-white/5 border-b border-slate-200 dark:border-white/5 p-4 flex justify-between items-center shrink-0">
+                        <div class="flex items-center gap-2">
+                            <div class="flex gap-1.5">
+                                <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                            </div>
+                            <span class="ml-3 text-xs font-mono text-slate-500 dark:text-slate-400">system_prompt_v1.md</span>
+                        </div>
+                        
+                        <button id="btn-copy" onclick="copyToClipboard()"
+                            class="flex items-center gap-2 px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-full transition-all active:scale-95 shadow-lg shadow-purple-900/20">
+                            <i data-lucide="copy" class="w-3.5 h-3.5" id="icon-copy"></i>
+                            <i data-lucide="check" class="w-3.5 h-3.5 hidden" id="icon-check"></i>
+                            <span id="text-copy">Sao chép Prompt</span>
+                        </button>
+                    </div>
+
+                    <!-- Preview Content -->
+                    <div class="p-6 md:p-8 overflow-y-auto flex-1 font-mono text-sm leading-relaxed relative group bg-slate-50/50 dark:bg-slate-900/50">
+                        <!-- Decor -->
+                        <div class="absolute top-0 right-0 p-4 opacity-50 pointer-events-none">
+                            <i data-lucide="wand-2" class="text-purple-500/20 w-24 h-24"></i>
+                        </div>
+
+                        <div id="prompt-content" class="whitespace-pre-wrap text-slate-700 dark:text-slate-300 relative z-10 transition-colors duration-300">
+                            <!-- Content generated by JS -->
+                        </div>
+                        <span class="inline-block w-2 h-4 bg-purple-500 ml-1 align-middle cursor-blink"></span>
+                    </div>
+
+                    <!-- Preview Footer -->
+                    <div class="bg-slate-50/80 dark:bg-white/5 border-t border-slate-200 dark:border-white/5 p-3 text-xs text-slate-500 flex justify-between shrink-0">
+                        <span id="char-count">Characters: 0</span>
+                        <span id="token-count">Tokens (ước tính): 0</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-12 py-6 text-center text-sm text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-white/5 fade-in" style="animation-delay: 0.5s;">
+            <p>Designed & Developed by <span class="font-bold text-slate-700 dark:text-slate-200">Hoàng Vinh (Victor Nguyen)</span></p>
+            <p class="text-xs mt-1 opacity-70">PromptMaster AI © 2024</p>
+        </footer>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- THEME MANAGEMENT ---
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Init Theme
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+
+        // --- DATA ---
+        const ROLES = [
+            { id: 'professor', label: 'Giáo sư Đại học', tone: 'Học thuật, chính xác, sâu sắc, có trích dẫn lý thuyết.' },
+            { id: 'teacher', label: 'Giáo viên Nhiệt huyết', tone: 'Động viên, kiên nhẫn, giải thích dễ hiểu, dùng phép ẩn dụ.' },
+            { id: 'student', label: 'Bạn học Giỏi (Top Student)', tone: 'Thân thiện, gần gũi, dùng ngôn ngữ tự nhiên, đi thẳng vào trọng tâm.' },
+            { id: 'socrates', label: 'Phương pháp Socrates', tone: 'Không đưa ra đáp án ngay. Đặt câu hỏi gợi mở để người học tự tìm ra câu trả lời. Tư duy phản biện.' },
+            { id: 'eli5', label: 'Giải thích cho bé 5 tuổi', tone: 'Cực kỳ đơn giản, vui vẻ, dùng ví dụ đời thường.' }
+        ];
+
+        const CURRICULUMS = [
+            { id: 'vn_2025', label: 'Việt Nam - SGK 2025 (Cấu trúc mới)' },
+            { id: 'vn_new', label: 'Việt Nam - SGK Mới (CT 2018)' },
+            { id: 'vn_old', label: 'Việt Nam - SGK Cũ' },
+            { id: 'us_common', label: 'Mỹ - Common Core' },
+            { id: 'intl_ib', label: 'Quốc tế - IB (International Baccalaureate)' },
+            { id: 'intl_alevel', label: 'Quốc tế - Cambridge A-Level' },
+            { id: 'general', label: 'Kiến thức tổng quát (Không theo giáo trình)' }
+        ];
+
+        const DEPTHS = [
+            { id: 'answer', label: 'Chỉ đưa đáp án', desc: 'Nhanh gọn, chính xác.' },
+            { id: 'summary', label: 'Giải thích tóm tắt', desc: 'Đáp án kèm lý giải ngắn.' },
+            { id: 'step_by_step', label: 'Chi tiết từng bước', desc: 'Logic tư duy từ A-Z.' },
+            { id: 'real_world', label: 'Ví dụ thực tế', desc: 'Liên hệ đời sống.' }
+        ];
+
+        // --- STATE ---
+        let state = {
+            subject: 'Toán học',
+            role: ROLES[0],
+            gradeLevel: 12,
+            curriculum: CURRICULUMS[0],
+            depth: DEPTHS[2]
+        };
+
+        // --- INIT & RENDER UI COMPONENTS ---
+        function init() {
+            // Render Roles
+            const roleContainer = document.getElementById('role-container');
+            roleContainer.innerHTML = ROLES.map(r => `
+                <button onclick="setRole('${r.id}')" 
+                    class="role-btn relative px-4 py-3 rounded-xl text-left border transition-all duration-200 ${state.role.id === r.id ? 'bg-purple-100 dark:bg-purple-600/20 border-purple-500 ring-1 ring-purple-500' : 'bg-white dark:bg-slate-800/30 border-slate-200 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800'}"
+                    id="role-${r.id}">
+                    <div class="font-medium text-sm text-slate-800 dark:text-slate-200">${r.label}</div>
+                    <div class="absolute top-3 right-3 text-purple-600 dark:text-purple-400 ${state.role.id === r.id ? 'block' : 'hidden'} check-icon">
+                        <i data-lucide="check" width="14" height="14"></i>
+                    </div>
+                </button>
+            `).join('');
+
+            // Render Curriculums
+            const currSelect = document.getElementById('curriculum');
+            currSelect.innerHTML = CURRICULUMS.map(c => `
+                <option value="${c.id}" class="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-200">${c.label}</option>
+            `).join('');
+            currSelect.value = state.curriculum.id;
+
+            // Render Depths
+            const depthContainer = document.getElementById('depth-container');
+            depthContainer.innerHTML = DEPTHS.map(d => `
+                <label class="depth-item flex items-center p-3 rounded-xl border cursor-pointer transition-all ${state.depth.id === d.id ? 'bg-blue-50 dark:bg-blue-600/10 border-blue-500 dark:border-blue-500/50' : 'bg-transparent border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'}" id="depth-${d.id}">
+                    <input type="radio" name="depth" value="${d.id}" class="hidden" onchange="setDepth('${d.id}')" ${state.depth.id === d.id ? 'checked' : ''}>
+                    <div class="w-4 h-4 rounded-full border flex items-center justify-center mr-3 ${state.depth.id === d.id ? 'border-blue-500 dark:border-blue-400' : 'border-slate-400 dark:border-slate-600'} radio-circle">
+                        <div class="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full ${state.depth.id === d.id ? 'block' : 'hidden'} radio-dot"></div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-slate-800 dark:text-slate-200">${d.label}</div>
+                        <div class="text-xs text-slate-500">${d.desc}</div>
+                    </div>
+                </label>
+            `).join('');
+
+            // Initialize Icons
+            lucide.createIcons();
+            
+            // Initial Prompt Generation
+            updatePrompt();
+        }
+
+        // --- ACTIONS ---
+
+        function setRole(id) {
+            state.role = ROLES.find(r => r.id === id);
+            
+            // Update UI classes manually
+            document.querySelectorAll('.role-btn').forEach(btn => {
+                btn.className = 'role-btn relative px-4 py-3 rounded-xl text-left border transition-all duration-200 bg-white dark:bg-slate-800/30 border-slate-200 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800';
+                btn.querySelector('.check-icon').classList.add('hidden');
+            });
+            const activeBtn = document.getElementById(`role-${id}`);
+            activeBtn.className = 'role-btn relative px-4 py-3 rounded-xl text-left border transition-all duration-200 bg-purple-100 dark:bg-purple-600/20 border-purple-500 ring-1 ring-purple-500';
+            activeBtn.querySelector('.check-icon').classList.remove('hidden');
+
+            updatePrompt();
+        }
+
+        function setDepth(id) {
+            state.depth = DEPTHS.find(d => d.id === id);
+            
+            document.querySelectorAll('.depth-item').forEach(item => {
+                item.className = `depth-item flex items-center p-3 rounded-xl border cursor-pointer transition-all bg-transparent border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50`;
+                item.querySelector('.radio-circle').className = 'w-4 h-4 rounded-full border flex items-center justify-center mr-3 border-slate-400 dark:border-slate-600 radio-circle';
+                item.querySelector('.radio-dot').classList.add('hidden');
+            });
+            
+            const activeItem = document.getElementById(`depth-${id}`);
+            activeItem.className = `depth-item flex items-center p-3 rounded-xl border cursor-pointer transition-all bg-blue-50 dark:bg-blue-600/10 border-blue-500 dark:border-blue-500/50`;
+            activeItem.querySelector('.radio-circle').className = 'w-4 h-4 rounded-full border flex items-center justify-center mr-3 border-blue-500 dark:border-blue-400 radio-circle';
+            activeItem.querySelector('.radio-dot').classList.remove('hidden');
+
+            updatePrompt();
+        }
+
+        // Event Listeners
+        document.getElementById('subject').addEventListener('input', (e) => {
+            state.subject = e.target.value;
+            updatePrompt();
+        });
+
+        document.getElementById('curriculum').addEventListener('change', (e) => {
+            state.curriculum = CURRICULUMS.find(c => c.id === e.target.value);
+            updatePrompt();
+        });
+
+        document.getElementById('grade-slider').addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            state.gradeLevel = val;
+            
+            // Update Display Badge
+            let label = '';
+            if (val <= 12) label = `Lớp ${val}`;
+            else if (val === 13) label = 'Đại học (Năm 1-2)';
+            else if (val === 14) label = 'Đại học (Năm 3-4)';
+            else if (val === 15) label = 'Thạc sĩ / Cao học';
+            else label = 'Tiến sĩ / Nghiên cứu sinh';
+            
+            document.getElementById('grade-display').textContent = label;
+
+            // Highlight label 12 if selected
+            const label12 = document.getElementById('label-grade-12');
+            if (val === 12) {
+                label12.classList.add('text-purple-600', 'dark:text-purple-400', 'font-bold');
+            } else {
+                label12.classList.remove('text-purple-600', 'dark:text-purple-400', 'font-bold');
+            }
+
+            updatePrompt();
+        });
+
+        // --- CORE LOGIC ---
+        function getGradeLabel(val) {
+            if (val <= 12) return `Lớp ${val}`;
+            if (val === 13) return 'Đại học (Năm 1-2)';
+            if (val === 14) return 'Đại học (Năm 3-4)';
+            if (val === 15) return 'Thạc sĩ / Cao học';
+            return 'Tiến sĩ / Nghiên cứu sinh';
+        }
+
+        function updatePrompt() {
+            const promptTemplate = `
+Hãy đóng vai trò là một **${state.role.label}** chuyên sâu về lĩnh vực **${state.subject || '[Môn học]'}**.
+Đối tượng người học hiện đang ở trình độ **${getGradeLabel(state.gradeLevel)}** theo chương trình **${state.curriculum.label}**.
+
+Tôi sẽ gửi cho bạn các bài tập hoặc câu hỏi ngay sau đây. Nhiệm vụ của bạn là giải quyết chúng dựa trên các yêu cầu sau:
+
+**Quy tắc phản hồi:**
+1. **Mức độ chi tiết:** ${state.depth.label}. (${state.depth.desc})
+2. **Phong cách/Giọng điệu:** ${state.role.tone}
+3. **Định dạng:** Sử dụng Markdown rõ ràng. Đối với các công thức toán học/khoa học, BẮT BUỘC sử dụng LaTeX (trong dấu $ hoặc $$).
+4. **Ngôn ngữ:** Tiếng Việt (trừ khi thuật ngữ chuyên ngành yêu cầu Tiếng Anh).
+
+${state.role.id === 'socrates' ? 'LƯU Ý QUAN TRỌNG: Đừng đưa ra đáp án ngay lập tức. Hãy dẫn dắt tôi qua từng bước tư duy.' : ''}
+
+Nếu bạn đã hiểu vai trò này, hãy trả lời ngắn gọn: "Sẵn sàng hỗ trợ! Hãy gửi bài tập của bạn."
+`.trim();
+
+            // Render with Syntax Highlighting Simulation
+            const container = document.getElementById('prompt-content');
+            const htmlContent = promptTemplate.split('\n').map(line => {
+                if (line.startsWith('Hãy đóng vai')) return `<span class="text-purple-700 dark:text-purple-300 block mb-2">${line}</span>`;
+                if (line.includes('---')) return `<span class="text-slate-500 dark:text-slate-600 block my-2">${line}</span>`;
+                if (line.startsWith('**Quy tắc')) return `<span class="text-amber-600 dark:text-yellow-300 font-bold block mt-4 mb-2">${line}</span>`;
+                if (line.match(/^\d\./)) return `<span class="text-blue-700 dark:text-blue-300 block ml-4">${line}</span>`;
+                return `<span class="block">${line}</span>`;
+            }).join('');
+            
+            container.innerHTML = htmlContent;
+
+            // Update Counts
+            document.getElementById('char-count').textContent = `Characters: ${promptTemplate.length}`;
+            document.getElementById('token-count').textContent = `Tokens (ước tính): ${Math.ceil(promptTemplate.length / 4)}`;
+        }
+
+        function copyToClipboard() {
+            const promptText = document.getElementById('prompt-content').innerText;
+            
+            const textArea = document.createElement("textarea");
+            textArea.value = promptText;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                document.execCommand('copy');
+                
+                // Show Success State
+                const btn = document.getElementById('btn-copy');
+                const iconCopy = document.getElementById('icon-copy');
+                const iconCheck = document.getElementById('icon-check');
+                const textCopy = document.getElementById('text-copy');
+
+                iconCopy.classList.add('hidden');
+                iconCheck.classList.remove('hidden');
+                textCopy.textContent = "Đã sao chép!";
+                
+                setTimeout(() => {
+                    iconCopy.classList.remove('hidden');
+                    iconCheck.classList.add('hidden');
+                    textCopy.textContent = "Sao chép Prompt";
+                }, 2000);
+
+            } catch (err) {
+                console.error('Unable to copy', err);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>
